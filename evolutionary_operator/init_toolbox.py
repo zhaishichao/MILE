@@ -2,8 +2,9 @@ import array
 
 from deap import creator, base, tools
 
-from operator import init_by_zero, random_init, objective_function, evaluate_individuals, binary_inversion, selNSGA2, \
-    get_feasible_infeasible
+from evolutionary_operator import init_by_zero, random_init, objective_function, evaluate_individuals, binary_inversion, \
+    selNSGA2, \
+    get_feasible_infeasible, remove_duplicates
 
 
 def init_toolbox(estimator, x_train, y_train, weights_train, constraints, n_splits=5, random_seed=42):
@@ -29,4 +30,5 @@ def init_toolbox(estimator, x_train, y_train, weights_train, constraints, n_spli
     toolbox.register("mutate", binary_inversion)  # 二进制突变
     toolbox.register("select", selNSGA2)  # NSGA-II选择（同一等级基于PFC选择）
     toolbox.register("get_feasible_infeasible", get_feasible_infeasible, constraints=constraints)  # 获取种群的可行解与不可行解
+    toolbox.register("remove_duplicates", remove_duplicates, penalty_factor=0.0)  # 去重
     return toolbox

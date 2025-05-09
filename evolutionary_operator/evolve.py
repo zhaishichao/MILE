@@ -1,7 +1,7 @@
 import math
 import random
 from itertools import chain
-from _operator import attrgetter
+from operator import attrgetter
 
 import numpy as np
 from deap import tools
