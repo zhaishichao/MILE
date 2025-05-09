@@ -1,9 +1,12 @@
+from _operator import attrgetter
+
+
 def cv(individual, constraints):
     '''
     计算个体的违约程度 (Degree of constraint violation) 简称cv
     :param individual: 个体
     :param constraints: 约束条件（三个约束阈值）
-    :return: 约束违反程度和
+    :return: 约束违反程度
     '''
     ind_fitness = individual.fitness.values
     if len(ind_fitness) != len(constraints):
@@ -13,3 +16,13 @@ def cv(individual, constraints):
     individual.cv = cv  # 将cv值保存在个体中
     return cv
 
+
+def get_feasible_infeasible(pop, constraints):
+    index = []
+    for i in range(len(pop)):
+        if cv(pop[i], constraints) != 0:  # 判断个体适应度是否都满足约束条件
+            index.append(i)  # 将不符合约束条件的个体的索引添加到index中
+    feasible_pop = [ind for j, ind in enumerate(pop) if j not in index]  # 可行解
+    infeasible_pop = [ind for j, ind in enumerate(pop) if j in index]  # 不可行解
+    infeasible_pop = sorted(infeasible_pop, key=attrgetter("individual.cv"), reverse=True)  # 对不可行解按cv值降序排序
+    return feasible_pop, infeasible_pop

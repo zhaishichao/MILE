@@ -31,7 +31,7 @@ def evaluate_individuals(individuals, estimator, x_train, y_train, n_splits, ran
     '''
     for individual in individuals:
         x_sub, y_sub = get_subset(individual, x_train, y_train)
-        y_pred_proba = k_fold_cross_validation(estimator=estimator, X=x_sub, y=y_sub, n_splits=n_splits, method='soft',
+        y_pred_proba = k_fold_cross_validation(estimator=estimator, x=x_sub, y=y_sub, n_splits=n_splits, method='soft',
                                                random_state=random_seed)  # 交叉验证得到软标签
         individual.y_sub_and_pred_proba = (y_sub, y_pred_proba)  # 保存个体的软标签和预测概率
         if not individual.fitness.valid:  # 如果该个体的适应度没有计算过

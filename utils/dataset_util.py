@@ -15,13 +15,13 @@ def get_distribution(y):
     return unique_elements, class_indices, counts
 
 
-def k_fold_cross_validation(estimator, X, y, n_splits=5, method='soft', random_state=42):
+def k_fold_cross_validation(estimator, x, y, n_splits=5, method='soft', random_state=42):
     """
     Perform 5-fold cross-validation and generate soft labels (probability predictions).
 
     Parameters:
     - model: A sklearn-compatible model with a `predict_proba` method.
-    - X: Feature matrix (numpy array or pandas DataFrame).
+    - x: Feature matrix (numpy array or pandas DataFrame).
     - y: Target vector (numpy array or pandas Series).
     - n_splits:k-fold cross validation
     - method: 'soft' or 'hard'
@@ -32,15 +32,15 @@ def k_fold_cross_validation(estimator, X, y, n_splits=5, method='soft', random_s
     """
     kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)  # 5-fold cross-validation
     soft_labels = np.zeros((len(y), len(np.unique(y))))  # Initialize array for soft labels
-    for train_index, test_index in kf.split(X, y):
+    for train_index, test_index in kf.split(x, y):
         # Split datasets into train and test
-        X_train, X_test = X[train_index], X[test_index]
+        x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
         # Clone and fit the model on the training set
         estimator_clone = clone(estimator)
-        estimator_clone.fit(X_train, y_train)
+        estimator_clone.fit(x_train, y_train)
         # Generate soft labels (probability predictions)
-        y_proba = estimator_clone.predict_proba(X_test)
+        y_proba = estimator_clone.predict_proba(x_test)
         soft_labels[test_index] = y_proba
     if method == 'soft':
         return soft_labels
@@ -66,7 +66,7 @@ def pre_processing(n_splits, file_path=None, estimator=None, display_distributio
         print(f'distribution: {counts_all}')
         print(f'trainset distribution: {counts_train}')
         print(f'testset distribution: {counts_test}')
-    y_train_pred_proba = k_fold_cross_validation(estimator=estimator, X=x_train, y=y_train, n_splits=n_splits,
+    y_train_pred_proba = k_fold_cross_validation(estimator=estimator, x=x_train, y=y_train, n_splits=n_splits,
                                                  method='soft',
                                                  random_state=random_state)  # 交叉验证得到软标签
     y_train_pred = np.argmax(y_train_pred_proba, axis=1)  # 将概率转化为预测结果
