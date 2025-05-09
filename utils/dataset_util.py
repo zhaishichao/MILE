@@ -51,7 +51,8 @@ def k_fold_cross_validation(estimator, x, y, n_splits=5, method='soft', random_s
         raise ValueError("Invalid method. Choose 'soft' or 'hard'.")
 
 
-def pre_processing(n_splits, file_path=None, estimator=None, display_distribution=False, random_state=42):
+def pre_processing(n_splits, display_distribution, file_path=None, estimator=None,
+                   random_state=42):
     mat_data = sio.loadmat(file_path)  # 加载、划分数据集
     x = mat_data['X']
     y = mat_data['Y'][:, 0]  # mat_data['Y']得到的形状为[n,1]，通过[:,0]，得到形状[n,]
