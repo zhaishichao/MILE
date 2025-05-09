@@ -68,7 +68,7 @@ def selNSGA2(individuals, k, nd='standard'):
         sorted_front = sorted(pareto_fronts[-1], key=attrgetter("fitness.crowding_dist"), reverse=True)
         chosen.extend(sorted_front[:k])
 
-    return chosen, pareto_fronts
+    return chosen
 
 
 def assignCrowdingDist_PFC(individuals):

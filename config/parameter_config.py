@@ -1,7 +1,17 @@
+class MILEConfig:
+    '''
+    MILE算法参数
+    '''
+    def __init__(self, ngen=30, popsize=30, cxpb=1.0, mr=0.2):
+        self.NGEN = ngen #  迭代次数
+        self.POPSIZE = popsize # 种群大小
+        self.CXPB = cxpb # 交叉概率
+        self.MR = mr # 变异概率
+
 
 class DataSetConfig: # DataSetConfig
     '''
-    Configuration information for the dataset.
+    Configuration information for the dataset
     '''
     def __init__(self, dataset_name, hidden_size, max_iter, learning_rate):
         self.DATASETNAME = dataset_name #  数据集名称
