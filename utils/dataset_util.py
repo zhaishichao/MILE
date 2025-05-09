@@ -32,7 +32,6 @@ def k_fold_cross_validation(estimator, X, y, n_splits=5, method='soft', random_s
     """
     kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)  # 5-fold cross-validation
     soft_labels = np.zeros((len(y), len(np.unique(y))))  # Initialize array for soft labels
-    # scores = []
     for train_index, test_index in kf.split(X, y):
         # Split datasets into train and test
         X_train, X_test = X[train_index], X[test_index]
