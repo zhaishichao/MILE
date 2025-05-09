@@ -52,7 +52,7 @@ def k_fold_cross_validation(estimator, X, y, n_splits=5, method='soft', random_s
         raise ValueError("Invalid method. Choose 'soft' or 'hard'.")
 
 
-def pre_processing(file_path=None, estimator=None, display_distribution=False, random_state=42):
+def pre_processing(n_splits, file_path=None, estimator=None, display_distribution=False, random_state=42):
     mat_data = sio.loadmat(file_path)  # 加载、划分数据集
     x = mat_data['X']
     y = mat_data['Y'][:, 0]  # mat_data['Y']得到的形状为[n,1]，通过[:,0]，得到形状[n,]
@@ -67,10 +67,30 @@ def pre_processing(file_path=None, estimator=None, display_distribution=False, r
         print(f'distribution: {counts_all}')
         print(f'trainset distribution: {counts_train}')
         print(f'testset distribution: {counts_test}')
-    y_train_pred_proba = k_fold_cross_validation(estimator=estimator, X=x_train, y=y_train, n_splits=5,
+    y_train_pred_proba = k_fold_cross_validation(estimator=estimator, X=x_train, y=y_train, n_splits=n_splits,
                                                  method='soft',
                                                  random_state=random_state)  # 交叉验证得到软标签
     y_train_pred = np.argmax(y_train_pred_proba, axis=1)  # 将概率转化为预测结果
     Acc1, Acc2, Acc3 = calculate_expert_accuracy(y_train_pred, y_train, weights_train)
     constraints = [Acc1, Acc2, Acc3]
     return x_train, x_test, y_train, y_test, constraints, weights_train
+
+
+def get_indices(individual):
+    '''
+    :param individual: individual（用二进制或0-1范围内的实值进行编码）
+    :return: 被选择实例的索引
+    '''
+    indices = np.where(individual == 1)  # 1代表选择该实例，返回值是tuple，tuple[0]取元组中的第一个元素
+    return indices[0]
+
+
+def get_subset(individual, x, y):
+    '''
+    :param individual:
+    :return: 实例子集
+    '''
+    indices = get_indices(individual)
+    x_sub = x[indices, :]
+    y_sub = y[indices]
+    return x_sub, y_sub
