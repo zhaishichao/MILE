@@ -1,2 +1,1 @@
-from .dataset_config import DataSetConfig
-from .dataset_config import BalanceScale
+from .dataset_config import *

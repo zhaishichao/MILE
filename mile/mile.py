@@ -19,12 +19,17 @@ class MILE():
         and the subset of instances at random initialization.
     """
 
-    def __init__(self, file_path=None, estimator=None, random_state=42):
+    def __init__(self, file_path=None, estimator=None, random_state=42,n_splits=5):
         self.file_path = file_path
         self.estimator = clone(estimator)
         self.random_state = random_state
+        self.n_splits = n_splits
         self.x_train, self.x_test, self.y_train, self.y_test, self.constraints, self.weights_train = pre_processing(file_path=self.file_path,
-            estimator=estimator, display_distribution=True, random_state=random_state)
+            estimator=estimator, display_distribution=True, random_state=random_state,n_splits=self.n_splits)
+
+    def fit(self):
+        a=1
+
 
 
 if __name__ == '__main__':
