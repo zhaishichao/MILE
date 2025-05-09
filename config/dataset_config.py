@@ -9,4 +9,5 @@ class DataSetConfig: # DataSetConfig
         self.LEARNING_RATE = learning_rate #  LearningRate
 
 
+
 BalanceScale = DataSetConfig('BalanceScale.mat', 15, 500, 0.1) #  BalanceScale
