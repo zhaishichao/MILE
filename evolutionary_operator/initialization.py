@@ -9,6 +9,7 @@ from .evaluate import *
 from .constraint import *
 from .evolve import *
 
+
 def init_by_zero(binary=0):
     '''
     二进制编码
@@ -44,7 +45,7 @@ def random_init(population, y_train, ratio):
     return population
 
 
-def init_toolbox(estimator, x_train, y_train, weights_train, constraints, n_splits=5, random_seed=42):
+def init_toolbox(estimator, x_train, y_train, weights_train, constraints, random_state, n_splits=5):
     '''
     将MILE中涉及到的算子，封装到deap库中的toolbox里
     :param y_train: 训练集标签
@@ -52,7 +53,7 @@ def init_toolbox(estimator, x_train, y_train, weights_train, constraints, n_spli
     '''
     len_ind = len(y_train)  # 个体长度
     creator.create("FitnessMaxAndMax", base.Fitness, weights=(1.0, 1.0, 1.0))  # 最大化目标
-    creator.create("Individual", array.array, typecode='i', fitness=creator.FitnessMaxAndMax, pfc=None, model=None,
+    creator.create("Individual", array.array, typecode='i', fitness=creator.FitnessMaxAndMax, pfc=None, estimator=None,
                    y_sub_and_pred_proba=None, gmean=None, mauc=None, cv=None)  # 个体
     toolbox = base.Toolbox()
     toolbox.register("gene", init_by_zero)  # 0-1编码，基因全部初始化为0或1
@@ -63,7 +64,7 @@ def init_toolbox(estimator, x_train, y_train, weights_train, constraints, n_spli
     toolbox.register("objective_function", objective_function, weights_train=weights_train)  # 目标函数
     toolbox.register("evaluate", evaluate_individuals, estimator=estimator, x_train=x_train, y_train=y_train,
                      n_splits=n_splits,
-                     random_seed=random_seed, weights_train=weights_train)  # 评价个体
+                     random_state=random_state, weights_train=weights_train)  # 评价个体
     toolbox.register("mate", tools.cxOnePoint)  # 单点交叉
     toolbox.register("mutate", binary_inversion)  # 二进制突变
     toolbox.register("select", selNSGA2)  # NSGA-II选择（同一等级基于PFC选择）

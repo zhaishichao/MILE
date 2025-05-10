@@ -24,16 +24,17 @@ class MILE():
         是否显示数据的分布信息
     """
 
-    def __init__(self, file_path=None, estimator=None, random_state=42, n_splits=5, display_distribution=True, parameter=None):
+    def __init__(self, file_path=None, estimator=None, random_state=42, n_splits=5, display_distribution=True,
+                 parameter=None):
         self.file_path = file_path
         self.estimator = estimator
         self.random_state = random_state
         self.n_splits = n_splits
         self.x_train, self.x_test, self.y_train, self.y_test, self.constraints, self.weights_train = pre_processing(
-            self.n_splits, display_distribution, self.file_path, self.estimator, self.random_state)
+            self.n_splits, display_distribution, self.random_state, self.file_path, self.estimator)
         self.toolbox = init_toolbox(self.estimator, self.x_train, self.y_train, self.weights_train, self.constraints,
-                                    self.n_splits, self.random_state)
-        self.parameter=parameter
+                                    self.random_state, self.n_splits)
+        self.parameter = parameter
 
     def fit(self, ):
         ####################################种群的初始化###########################
@@ -85,6 +86,6 @@ if __name__ == '__main__':
     DATASET = BalanceScale  # 数据集名称（包含对应的参数配置）
     file_path = IMBALANCED_DATASET_PATH + DATASET.DATASETNAME
     name = BalanceScale.DATASETNAME.split('.')[0]
-    model = MLPClassifier(hidden_layer_sizes=(DATASET.HIDDEN_SIZE,), max_iter=DATASET.MAX_ITER,
-                          random_state=42, learning_rate_init=DATASET.LEARNING_RATE)
-    mile = MILE(file_path=file_path, estimator=model, random_state=42)
+    mlp = MLPClassifier(hidden_layer_sizes=(DATASET.HIDDEN_SIZE,), max_iter=DATASET.MAX_ITER,
+                        random_state=42, learning_rate_init=DATASET.LEARNING_RATE)
+    mile = MILE(file_path=file_path, estimator=mlp, random_state=42)

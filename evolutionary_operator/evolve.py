@@ -83,7 +83,7 @@ def assignCrowdingDist_PFC(individuals):
     failpat = []
     for ind in individuals:
         y_sub, y_pred_proba = ind.y_sub_and_pred_proba  # 训练子集和对应的预测软标签
-        y_pred = np.argmax(y_pred_proba, axis=1)  # 模型预测结果
+        y_pred = np.argmax(y_pred_proba, axis=1)  # 分类器预测结果
         binary_sequence = [1 if y1 == y2 else 0 for y1, y2 in zip(y_sub, y_pred)]  # 0表示对应实例预测错误，1表示预测正确
         failpat.append(binary_sequence)
 

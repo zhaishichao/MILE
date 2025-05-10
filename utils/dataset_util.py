@@ -15,12 +15,12 @@ def get_distribution(y):
     return unique_elements, class_indices, counts
 
 
-def k_fold_cross_validation(estimator, x, y, n_splits=5, method='soft', random_state=42):
+def k_fold_cross_validation(estimator, x, y, random_state, n_splits=5, method='soft'):
     """
     Perform 5-fold cross-validation and generate soft labels (probability predictions).
 
     Parameters:
-    - model: A sklearn-compatible model with a `predict_proba` method.
+    - estimator: A sklearn-compatible estimator with a `predict_proba` method.
     - x: Feature matrix (numpy array or pandas DataFrame).
     - y: Target vector (numpy array or pandas Series).
     - n_splits:k-fold cross validation
@@ -36,7 +36,7 @@ def k_fold_cross_validation(estimator, x, y, n_splits=5, method='soft', random_s
         # Split datasets into train and test
         x_train, x_test = x[train_index], x[test_index]
         y_train, y_test = y[train_index], y[test_index]
-        # Clone and fit the model on the training set
+        # Clone and fit the estimator on the training set
         estimator_clone = clone(estimator)
         estimator_clone.fit(x_train, y_train)
         # Generate soft labels (probability predictions)
@@ -51,13 +51,12 @@ def k_fold_cross_validation(estimator, x, y, n_splits=5, method='soft', random_s
         raise ValueError("Invalid method. Choose 'soft' or 'hard'.")
 
 
-def pre_processing(n_splits, display_distribution, file_path=None, estimator=None,
-                   random_state=42):
+def pre_processing(n_splits, display_distribution, random_state, file_path=None, estimator=None):
     mat_data = sio.loadmat(file_path)  # 加载、划分数据集
     x = mat_data['X']
     y = mat_data['Y'][:, 0]  # mat_data['Y']得到的形状为[n,1]，通过[:,0]，得到形状[n,]
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, stratify=y,
-                                                        random_state=42)  # 划分数据集
+                                                        random_state=random_state)  # 划分数据集
     unique_elements_all, classes_all, counts_all = get_distribution(y)  # 获取原始数据集分布
     unique_elements_train, classes_train, counts_train = get_distribution(y_train)  # 获取训练集分布
     unique_elements_test, classes_test, counts_test = get_distribution(y_test)  # 获取测试集分布
@@ -67,9 +66,8 @@ def pre_processing(n_splits, display_distribution, file_path=None, estimator=Non
         print(f'distribution: {counts_all}')
         print(f'trainset distribution: {counts_train}')
         print(f'testset distribution: {counts_test}')
-    y_train_pred_proba = k_fold_cross_validation(estimator=estimator, x=x_train, y=y_train, n_splits=n_splits,
-                                                 method='soft',
-                                                 random_state=random_state)  # 交叉验证得到软标签
+    y_train_pred_proba = k_fold_cross_validation(estimator=estimator, x=x_train, y=y_train, random_state=random_state,
+                                                 n_splits=n_splits, method='soft')  # 交叉验证得到软标签
     y_train_pred = np.argmax(y_train_pred_proba, axis=1)  # 将概率转化为预测结果
     Acc1, Acc2, Acc3 = calculate_expert_accuracy(y_train_pred, y_train, weights_train)
     constraints = [Acc1, Acc2, Acc3]
