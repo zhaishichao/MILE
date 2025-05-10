@@ -2,6 +2,8 @@ import numpy as np
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.base import clone
 import scipy.io as sio  # 从.mat文件中读取数据集
+from sklearn.preprocessing import StandardScaler
+
 from metrics import calculate_expert_accuracy
 
 
@@ -57,6 +59,10 @@ def pre_processing(n_splits, display_distribution, random_state, file_path=None,
     y = mat_data['Y'][:, 0]  # mat_data['Y']得到的形状为[n,1]，通过[:,0]，得到形状[n,]
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, stratify=y,
                                                         random_state=random_state)  # 划分数据集
+    # 数据的标准化
+    scaler = StandardScaler()
+    x_train = scaler.fit_transform(x_train)
+    x_test = scaler.transform(x_test)
     unique_elements_all, classes_all, counts_all = get_distribution(y)  # 获取原始数据集分布
     unique_elements_train, classes_train, counts_train = get_distribution(y_train)  # 获取训练集分布
     unique_elements_test, classes_test, counts_test = get_distribution(y_test)  # 获取测试集分布
