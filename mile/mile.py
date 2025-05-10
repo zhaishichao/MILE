@@ -5,6 +5,8 @@ from config import BalanceScale, MILEConfig
 from evolutionary_operator import init_toolbox, ensemble_individuals, vote_result_ensembles
 from metrics import calculate_gmean_mauc
 from utils import pre_processing
+import warnings
+warnings.filterwarnings("ignore")  # 忽略警告
 
 
 class MILE():
