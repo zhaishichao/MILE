@@ -12,7 +12,7 @@ def cv(individual, constraints):
         raise ValueError("约束条件和个体适应度无法匹配！")
     difference = [min(0, x - y) for x, y in zip(ind_fitness, constraints)]  # 判断个体三个专家指标是否都大于等于约束条件
     cv = sum(difference)  # 求0和cv中的最小值之和，cv=0，表示是一个可行个体
-    individual.cv = cv  # 将cv值保存在个体中
+    individual.fitness.cv = cv  # 将cv值保存在个体中
     return cv
 
 
@@ -23,7 +23,7 @@ def get_feasible_infeasible(pop, constraints):
             index.append(i)  # 将不符合约束条件的个体的索引添加到index中
     feasible_pop = [ind for j, ind in enumerate(pop) if j not in index]  # 可行个体
     infeasible_pop = [ind for j, ind in enumerate(pop) if j in index]  # 不可行个体
-    infeasible_pop = sorted(infeasible_pop, key=attrgetter("individual.cv"), reverse=True)  # 对不可行个体按cv值降序排序
+    infeasible_pop = sorted(infeasible_pop, key=attrgetter("fitness.cv"), reverse=True)  # 对不可行个体按cv值降序排序
     return feasible_pop, infeasible_pop
 
 def remove_duplicates(pop, penalty_factor=0.0):

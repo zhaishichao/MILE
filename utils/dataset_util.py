@@ -79,6 +79,8 @@ def get_indices(individual):
     :param individual: individual（用二进制或0-1范围内的实值进行编码）
     :return: 被选择实例的索引
     '''
+    # 将individual转化为ndarray
+    individual = np.array(individual)
     indices = np.where(individual == 1)  # 1代表选择该实例，返回值是tuple，tuple[0]取元组中的第一个元素
     return indices[0]
 
