@@ -1,6 +1,6 @@
-from sklearn.base import clone
-from sklearn.neural_network import MLPClassifier
+import numpy as np
 import random
+from sklearn.neural_network import MLPClassifier
 from config import BalanceScale, MILEConfig
 from evolutionary_operator import init_toolbox, ensemble_individuals, vote_result_ensembles
 from metrics import calculate_gmean_mauc
@@ -121,7 +121,16 @@ if __name__ == '__main__':
     mile = MILE(file_path=file_path, estimator=mlp, random_state=42, n_splits=5, display_distribution=True,
                 parameter=mile_parameter)
 
-    mile.fit()
-    y_pred_proba = mile.predict_proba(mile.x_test)
-    gmean, mauc = calculate_gmean_mauc(y_pred_proba, mile.y_test)
-    print(f"Gmean：{gmean}，mAUC：{mauc}")
+    num_run = 40
+    ensembles_results = []
+    for i in range(0, num_run):
+        mile.fit()
+        y_pred = mile.predict(mile.x_test)
+        y_pred_prob = mile.predict_proba(mile.x_test)
+        gmean, mauc = calculate_gmean_mauc(y_pred_prob, mile.y_test)
+        ensembles_results.append([gmean, mauc])
+        print(f"第{i+1}次运行：Gmean：{gmean}，mAUC：{mauc}")
+    ensembles_result_mean = np.mean(ensembles_results, axis=0)
+    ensembles_result_std = np.std(ensembles_results, axis=0)
+    print(f'集成分类结果（平均值）：{ensembles_result_mean}')
+    print(f'集成分类结果（标准差）：{ensembles_result_std}')
