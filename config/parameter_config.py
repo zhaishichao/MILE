@@ -9,9 +9,9 @@ class MILEConfig:
         self.MR = mr # 变异概率
 
 
-class DataSetConfig: # DataSetConfig
+class DataSetConfig:
     '''
-    Configuration information for the dataset
+    数据集参数
     '''
     def __init__(self, dataset_name, hidden_size, max_iter, learning_rate):
         self.DATASETNAME = dataset_name #  数据集名称

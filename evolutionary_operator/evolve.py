@@ -6,6 +6,11 @@ from operator import attrgetter
 import numpy as np
 from deap import tools
 
+# 参见 deap.tools.selTournamentNDCD/selNSGA2
+# 这里对这两个算法进行了重写
+# 主要是将crowding_dist拥挤距离更换为PFC
+# 注意只是值的替换，变量名称仍未crowding_dist
+# 这么做是为了便于调用deap库
 
 def binary_inversion(individual, mutation_rate=0.2):
     num_genes = len(individual)  # 基因总数

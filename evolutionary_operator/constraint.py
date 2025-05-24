@@ -17,6 +17,11 @@ def cv(individual, constraints):
 
 
 def get_feasible_infeasible(pop, constraints):
+    '''
+    :param pop: 种群
+    :param constraints: 约束阈值
+    :return: 可行解和不可行解
+    '''
     index = []
     for i in range(len(pop)):
         if cv(pop[i], constraints) != 0:  # 判断个体适应度是否都满足约束条件
