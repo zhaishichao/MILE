@@ -67,6 +67,8 @@ def init_toolbox(estimator, x_train, y_train, weights_train, constraints, random
     toolbox.register("mutate", binary_inversion)  # 二进制突变
     toolbox.register("select", selNSGA2)  # NSGA-II选择（同一等级基于PFC选择）
     toolbox.register("get_feasible_infeasible", get_feasible_infeasible, constraints=constraints)  # 获取种群的可行个体与不可行个体
+    toolbox.register("individual_constraints", individuals_constraints_in_classes, x_train=x_train,
+                     y_train=y_train)  # 限制每个类至少有一个实例被选择（对个体）
     toolbox.register("remove_duplicates", remove_duplicates)  # 去重
     toolbox.register("selTournamentNDCD", selTournamentNDCD)  # 锦标赛选择（同一等级基于PFC选择）
     return toolbox

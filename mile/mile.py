@@ -75,6 +75,7 @@ class MILE():
                     add_individual.append(offspring[index])
                 pop = pop + add_individual  # 再次合并
                 pop, _ = self.toolbox.remove_duplicates(pop)  # 再次去重
+                pop = self.toolbox.individuals_constraints(pop)  # 限制每个类至少有5个实例被选择
             self.toolbox.evaluate(pop)  # 评估新种群
             feasible_pop, infeasible_pop = self.toolbox.get_feasible_infeasible(pop)  # 得到可行个体与不可行个体
             if len(feasible_pop) >= self.parameter.POPSIZE:
