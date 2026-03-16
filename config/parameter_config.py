@@ -1,23 +1,23 @@
 class MILEConfig:
     '''
-    MILE算法参数
+    Parameters of MILE.
     '''
-    def __init__(self, ngen=30, popsize=30, cxpb=1.0, mr=0.2):
-        self.NGEN = ngen #  迭代次数
-        self.POPSIZE = popsize # 种群大小
-        self.CXPB = cxpb # 交叉概率
-        self.MR = mr # 变异概率
+    def __init__(self, ngen=30, popsize=30, cxpb=1.0, mutpb=0.2):
+        self.NGEN = ngen # number of generations
+        self.POPSIZE = popsize # population size
+        self.CXPB = cxpb # probability of crossover
+        self.MUTPB = mutpb # Probability of mutation
 
 
 class DataSetConfig:
     '''
-    数据集参数
+    Parameters of different datasets.
     '''
     def __init__(self, dataset_name, hidden_size, max_iter, learning_rate):
-        self.DATASETNAME = dataset_name #  数据集名称
-        self.HIDDEN_SIZE = hidden_size #  隐藏层大小
-        self.MAX_ITER = max_iter #  最大迭代次数
-        self.LEARNING_RATE = learning_rate #  学习率
+        self.DATASET_NAME = dataset_name
+        self.HIDDEN_SIZE = hidden_size
+        self.MAX_ITER = max_iter #  maximum number of iterations
+        self.LEARNING_RATE = learning_rate #  learning rate of MLP
 
-# 数据集配置
-BalanceScale = DataSetConfig('BalanceScale.mat', 15, 500, 0.1) #  BalanceScale
+# benchmark datasets (from UCL and KEEL )
+BalanceScale = DataSetConfig('BalanceScale.mat', 15, 500, 0.1) # BalanceScale

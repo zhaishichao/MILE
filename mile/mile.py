@@ -57,8 +57,8 @@ class MILE():
             for i in range(0, len(offspring) - 1, 2):
                 if random.random() <= self.parameter.CXPB:
                     offspring[i], offspring[i + 1] = self.toolbox.mate(offspring[i], offspring[i + 1])  # 单点交叉
-                offspring[i] = self.toolbox.mutate(offspring[i], self.parameter.MR)[0]  # 二进制反转
-                offspring[i + 1] = self.toolbox.mutate(offspring[i + 1], self.parameter.MR)[0]  # 二进制反转
+                offspring[i] = self.toolbox.mutate(offspring[i], self.parameter.MUTPB)[0]  # 二进制反转
+                offspring[i + 1] = self.toolbox.mutate(offspring[i + 1], self.parameter.MUTPB)[0]  # 二进制反转
                 del offspring[i].fitness.values, offspring[i + 1].fitness.values
             # 合并、去重
             pop = pop + offspring  # 种群的合并
@@ -70,7 +70,7 @@ class MILE():
                 # 随机选择一个个体进行突变
                 for i in range(0, num_add):
                     index = random.randint(0, len(offspring) - 1)
-                    offspring[index] = self.toolbox.mutate(offspring[index], self.parameter.MR)[0]  # 选择index对应的个体进行突变
+                    offspring[index] = self.toolbox.mutate(offspring[index], self.parameter.MUTPB)[0]  # 选择index对应的个体进行突变
                     del offspring[index].fitness.values
                     add_individual.append(offspring[index])
                 pop = pop + add_individual  # 再次合并
@@ -114,8 +114,8 @@ if __name__ == '__main__':
     mile_parameter = MILEConfig()
     IMBALANCED_DATASET_PATH = '../datasets/mat/'
     DATASET = BalanceScale  # 数据集名称（包含对应的参数配置）
-    file_path = IMBALANCED_DATASET_PATH + DATASET.DATASETNAME
-    name = BalanceScale.DATASETNAME.split('.')[0]
+    file_path = IMBALANCED_DATASET_PATH + DATASET.DATASET_NAME
+    name = BalanceScale.DATASET_NAME.split('.')[0]
     mlp = MLPClassifier(hidden_layer_sizes=(DATASET.HIDDEN_SIZE,), max_iter=DATASET.MAX_ITER,
                         random_state=42, learning_rate_init=DATASET.LEARNING_RATE)
 
