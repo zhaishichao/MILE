@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.base import clone
-import scipy.io as sio  # 从.mat文件中读取数据集
+import scipy.io as sio
 from sklearn.preprocessing import StandardScaler
 
 from metrics import calculate_expert_accuracy
@@ -22,7 +22,7 @@ def k_fold_cross_validation(estimator, x, y, random_state, n_splits=5, method='s
     Perform 5-fold cross-validation and generate soft labels (probability predictions).
 
     Parameters:
-    - estimator: A sklearn-compatible estimator with a `predict_proba` method.
+    - estimator: A sklearn-compatible estimator with a [predict_proba]
     - x: Feature matrix (numpy array or pandas DataFrame).
     - y: Target vector (numpy array or pandas Series).
     - n_splits:k-fold cross validation
@@ -54,27 +54,28 @@ def k_fold_cross_validation(estimator, x, y, random_state, n_splits=5, method='s
 
 
 def pre_processing(n_splits, display_distribution, random_state, file_path=None, estimator=None):
-    mat_data = sio.loadmat(file_path)  # 加载、划分数据集
+    mat_data = sio.loadmat(file_path)  # Load and split dataset
     x = mat_data['X']
-    y = mat_data['Y'][:, 0]  # mat_data['Y']得到的形状为[n,1]，通过[:,0]，得到形状[n,]
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, stratify=y,
-                                                        random_state=random_state)  # 划分数据集
-    # 数据的标准化
+    y = mat_data['Y'][:, 0]  # mat_data['Y'] has shape [n,1], use [:,0] to get shape [n,]
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, stratify=y,
+                                                        random_state=random_state)  # Split dataset
+    # Data standardization
     scaler = StandardScaler()
     x_train = scaler.fit_transform(x_train)
     x_test = scaler.transform(x_test)
-    unique_elements_all, classes_all, counts_all = get_distribution(y)  # 获取原始数据集分布
-    unique_elements_train, classes_train, counts_train = get_distribution(y_train)  # 获取训练集分布
-    unique_elements_test, classes_test, counts_test = get_distribution(y_test)  # 获取测试集分布
+    unique_elements_all, classes_all, counts_all = get_distribution(y)  # Get original dataset distribution
+    unique_elements_train, classes_train, counts_train = get_distribution(y_train)  # Get training set distribution
+    unique_elements_test, classes_test, counts_test = get_distribution(y_test)  # Get test set distribution
     weights_train = (1 / counts_train.astype(float)) / np.sum(
-        1 / counts_train.astype(float))  # 计算每个类的权重，用于计算每个类别的权重
+        1 / counts_train.astype(float))  # Calculate weight for each class
     if display_distribution:
         print(f'distribution: {counts_all}')
         print(f'trainset distribution: {counts_train}')
         print(f'testset distribution: {counts_test}')
     y_train_pred_proba = k_fold_cross_validation(estimator=estimator, x=x_train, y=y_train, random_state=random_state,
-                                                 n_splits=n_splits, method='soft')  # 交叉验证得到软标签
-    y_train_pred = np.argmax(y_train_pred_proba, axis=1)  # 将概率转化为预测结果
+                                                 n_splits=n_splits,
+                                                 method='soft')  # Get soft labels through cross-validation
+    y_train_pred = np.argmax(y_train_pred_proba, axis=1)  # Convert probabilities to predictions
     Acc1, Acc2, Acc3 = calculate_expert_accuracy(y_train_pred, y_train, weights_train)
     constraints = [Acc1, Acc2, Acc3]
     return x_train, x_test, y_train, y_test, constraints, weights_train
@@ -82,19 +83,20 @@ def pre_processing(n_splits, display_distribution, random_state, file_path=None,
 
 def get_indices(individual):
     '''
-    :param individual: individual（用二进制或0-1范围内的实值进行编码）
-    :return: 被选择实例的索引
+    :param individual: individual (encoded with binary or real values in 0-1 range)
+    :return: Indices of selected instances
     '''
-    # 将individual转化为ndarray
+    # Convert individual to ndarray
     individual = np.array(individual)
-    indices = np.where(individual == 1)  # 1代表选择该实例，返回值是tuple，tuple[0]取元组中的第一个元素
+    indices = np.where(
+        individual == 1)  # 1 means the instance is selected, return value is tuple, tuple[0] gets the first element
     return indices[0]
 
 
 def get_subset(individual, x, y):
     '''
-    :param individual:
-    :return: 实例子集
+    :param Individual:
+    :return: Instance subset
     '''
     indices = get_indices(individual)
     x_sub = x[indices, :]
