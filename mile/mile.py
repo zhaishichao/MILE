@@ -37,7 +37,7 @@ class MILE():
             result = list(pool.map(self.toolbox.evaluate, pop))
         for i, ind in enumerate(pop):
             if result[i]["valid"]:
-                ind.y_sub_and_pred_proba = result[i]["y_sub_and_pred_proba"]  # 保存个体的软标签和预测概率
+                ind.y_sub_and_pred_proba = result[i]["y_sub_and_pred_proba"]
                 ind.fitness.values = result[i]["fitness"]
 
         # Evolutionary search
@@ -55,14 +55,13 @@ class MILE():
             pop = pop + offspring
             pop, _ = self.toolbox.remove_duplicates(pop)  # Remove duplicates
 
-            # Ensure population size is POPSIZE...
+            # Ensure population size is POPSIZE
             while len(pop) < self.parameter.POPSIZE:
                 add_individual = []
-                num_add = self.parameter.POPSIZE - len(pop)  # 需要添加的个体数量
-                # 随机选择一个个体进行突变
+                num_add = self.parameter.POPSIZE - len(pop)
                 for i in range(0, num_add):
                     index = random.randint(0, len(offspring) - 1)
-                    offspring[index] = self.toolbox.mutate(offspring[index], self.parameter.MUTPB)[0]  # 选择index对应的个体进行突变
+                    offspring[index] = self.toolbox.mutate(offspring[index], self.parameter.MUTPB)[0]
                     del offspring[index].fitness.values
                     add_individual.append(offspring[index])
                 pop = pop + add_individual
