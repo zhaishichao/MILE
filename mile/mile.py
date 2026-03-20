@@ -6,6 +6,9 @@ from evolutionary_operator import init_toolbox, ensemble_individuals, vote_resul
 from metrics import calculate_gmean_mauc
 from utils import pre_processing
 import warnings
+from multiprocessing import Manager
+from concurrent.futures import ProcessPoolExecutor
+
 warnings.filterwarnings("ignore")  # 忽略警告
 
 
@@ -48,7 +51,12 @@ class MILE():
         # 种群的初始化
         pop = self.toolbox.population(n=self.parameter.POPSIZE)
         pop = self.toolbox.init_pop(pop)  # 初始化种群中的个体
-        self.toolbox.evaluate(pop)  # 评估初始种群
+        with ProcessPoolExecutor(max_workers=8) as pool:  # 评估初始种群
+            result = list(pool.map(self.toolbox.evaluate, pop))
+        for i, ind in enumerate(pop):
+            if result[i]["valid"]:
+                ind.y_sub_and_pred_proba = result[i]["y_sub_and_pred_proba"]  # 保存个体的软标签和预测概率
+                ind.fitness.values = result[i]["fitness"]
         # 实例子集进化搜索
         for gen in range(0, self.parameter.NGEN):
             # 选择、交叉、变异
@@ -75,8 +83,12 @@ class MILE():
                     add_individual.append(offspring[index])
                 pop = pop + add_individual  # 再次合并
                 pop, _ = self.toolbox.remove_duplicates(pop)  # 再次去重
-                pop = self.toolbox.individuals_constraints(pop)  # 限制每个类至少有5个实例被选择
-            self.toolbox.evaluate(pop)  # 评估新种群
+            with ProcessPoolExecutor(max_workers=8) as pool:  # 评估初始种群
+                result = list(pool.map(self.toolbox.evaluate, pop))
+            for i, ind in enumerate(pop):
+                if result[i]["valid"]:
+                    ind.y_sub_and_pred_proba = result[i]["y_sub_and_pred_proba"]  # 保存个体的软标签和预测概率
+                    ind.fitness.values = result[i]["fitness"]
             feasible_pop, infeasible_pop = self.toolbox.get_feasible_infeasible(pop)  # 得到可行个体与不可行个体
             if len(feasible_pop) >= self.parameter.POPSIZE:
                 pop = self.toolbox.select(feasible_pop, self.parameter.POPSIZE)
@@ -130,7 +142,7 @@ if __name__ == '__main__':
         y_pred_prob = mile.predict_proba(mile.x_test)
         gmean, mauc = calculate_gmean_mauc(y_pred_prob, mile.y_test)
         ensembles_results.append([gmean, mauc])
-        print(f"第{i+1}次运行：Gmean：{gmean}，mAUC：{mauc}")
+        print(f"第{i + 1}次运行：Gmean：{gmean}，mAUC：{mauc}")
     ensembles_result_mean = np.mean(ensembles_results, axis=0)
     ensembles_result_std = np.std(ensembles_results, axis=0)
     print(f'集成分类结果（平均值）：{ensembles_result_mean}')

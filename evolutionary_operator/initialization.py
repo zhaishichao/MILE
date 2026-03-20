@@ -61,14 +61,12 @@ def init_toolbox(estimator, x_train, y_train, weights_train, constraints, random
     toolbox.register("init_pop", random_init, y_train=y_train, ratio=0.9)  # 初始化为平衡数据集（实例个数为min*0.9）
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)  # 种群初始化
     toolbox.register("objective_function", objective_function, weights_train=weights_train)  # 目标函数
-    toolbox.register("evaluate", evaluate_individuals, estimator=estimator, x_train=x_train, y_train=y_train,
+    toolbox.register("evaluate", evaluate_individual, estimator=estimator, x_train=x_train, y_train=y_train,
                      n_splits=n_splits, random_state=random_state, weights_train=weights_train)  # 评价个体
     toolbox.register("mate", tools.cxOnePoint)  # 单点交叉
     toolbox.register("mutate", binary_inversion)  # 二进制突变
     toolbox.register("select", selNSGA2)  # NSGA-II选择（同一等级基于PFC选择）
     toolbox.register("get_feasible_infeasible", get_feasible_infeasible, constraints=constraints)  # 获取种群的可行个体与不可行个体
-    toolbox.register("individual_constraints", individuals_constraints_in_classes, x_train=x_train,
-                     y_train=y_train)  # 限制每个类至少有一个实例被选择（对个体）
     toolbox.register("remove_duplicates", remove_duplicates)  # 去重
     toolbox.register("selTournamentNDCD", selTournamentNDCD)  # 锦标赛选择（同一等级基于PFC选择）
     return toolbox

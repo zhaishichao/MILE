@@ -60,38 +60,6 @@ def remove_duplicates(pop, penalty_factor=0.0):
         to_remove.update(duplicate)  # update是用来更新set集合的
     return [pop[i] for i in range(len(pop)) if i not in to_remove], len(to_remove)
 
-def ensure_min_samples(individual, y_train, min_samples=3):
-    """
-    确保ind中选择的实例，每个类别至少有min_samples个，
-    若不足，则从未选择的实例中补充。
-
-    :param X: 实例数据，形状为 (n_samples, n_features)
-    :param Y: 标签数据，形状为 (n_samples,)
-    :param ind: 选择序列，形状为 (n_samples,)
-    :param min_samples: 每个类别的最小选择样本数
-    :return: 更新后的选择序列 ind
-    """
-    Y = np.array(y_train)
-
-    unique_classes = np.unique(Y)
-
-    for cls in unique_classes:
-        selected_indices = np.where((individual == 1) & (Y == cls))[0]
-        unselected_indices = np.where((individual == 0) & (Y == cls))[0]
-
-        if len(selected_indices) < min_samples:
-            num_needed = min_samples - len(selected_indices)
-            if len(unselected_indices) >= num_needed:
-                additional_indices = np.random.choice(unselected_indices, num_needed, replace=False)
-            else:
-                additional_indices = unselected_indices  # 如果不足，则全选
-            # 将additional_indices转换成整数
-            additional_indices = additional_indices.astype(int)
-            for ind in additional_indices:
-                individual[ind] = 1
-
-    return individual
-
 def individuals_constraints_in_classes(individuals, x_train, y_train, min_samples=5):
     '''
     如果存在未选择的类别；

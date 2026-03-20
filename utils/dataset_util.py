@@ -57,7 +57,7 @@ def pre_processing(n_splits, display_distribution, random_state, file_path=None,
     mat_data = sio.loadmat(file_path)  # 加载、划分数据集
     x = mat_data['X']
     y = mat_data['Y'][:, 0]  # mat_data['Y']得到的形状为[n,1]，通过[:,0]，得到形状[n,]
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, stratify=y,
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, stratify=y,
                                                         random_state=random_state)  # 划分数据集
     # 数据的标准化
     scaler = StandardScaler()
