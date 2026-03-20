@@ -20,7 +20,6 @@ def cv(individual, constraints):
     individual.fitness.cv = cv  # 将cv值保存在个体中
     return cv
 
-
 def get_feasible_infeasible(pop, constraints):
     '''
     :param pop: 种群
@@ -59,42 +58,3 @@ def remove_duplicates(pop, penalty_factor=0.0):
     for duplicate in duplicates:
         to_remove.update(duplicate)  # update是用来更新set集合的
     return [pop[i] for i in range(len(pop)) if i not in to_remove], len(to_remove)
-
-def individuals_constraints_in_classes(individuals, x_train, y_train, min_samples=5):
-    '''
-    如果存在未选择的类别；
-    则在1-length（该类实例个数）之间生成一个随机数random_number；
-    选择random_number个实例，添加到当前个体中。
-    :param individuals: 每个个体
-    :param x_train: 特征数据，在这个地方没什么用处，只是为了调用get_subset而已
-    :param y_train: 标签
-    :return: individuals （符合约束条件的个体集）
-    '''
-    # 使用 numpy.unique 获取类别、计数以及每个类别对应的索引
-    unique_elements, _ = np.unique(y_train, return_counts=True)
-    # 构造每个类别的索引列表
-    class_indices = {element: np.where(y_train == element)[0] for element in unique_elements}
-    # 将unique_elements中的元素，构造一个set集合
-    unique_elements_set = set(unique_elements)
-    for individual in individuals:
-        # 获取实例子集
-        _, y_sub = get_subset(individual, x_train, y_train)
-        unique_elements_sub, counts_sub = np.unique(y_sub, return_counts=True)
-        unique_elements_sub_set = set(unique_elements_sub)
-        # 对两个集合做差，得到差集（即未选择的类标签）
-        unselected_set = unique_elements_set - unique_elements_sub_set
-        # 如果差集不为空，则表示存在类没有被选择
-        for selected_element, count in zip(unique_elements_sub, counts_sub):
-            if count < min_samples:
-                # 将该类标签添加到unselected_set中
-                unselected_set.add(selected_element)
-        if len(unselected_set) > 0:
-            for unselected in unselected_set:
-                # 获取unselected类的训练集的实例个数
-                length = int(np.ceil(len(class_indices[unselected]) * 0.9))
-                # 在0-length之间随机生成一个数字
-                random_number = np.random.randint(5, length)
-                selected_indices = np.random.choice(class_indices[unselected], random_number, replace=False)
-                for index in selected_indices:
-                    individual[index] = 1
-    return individuals

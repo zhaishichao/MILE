@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.model_selection import cross_val_predict
 
 from metrics import calculate_expert_accuracy
-from utils import get_subset, k_fold_cross_validation
+from utils import get_subset
 
 
 def objective_function(individual, weights_train):

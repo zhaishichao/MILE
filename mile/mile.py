@@ -1,12 +1,9 @@
-import numpy as np
 import random
-from sklearn.neural_network import MLPClassifier
-from config import BalanceScale, MILEConfig
-from evolutionary_operator import init_toolbox, ensemble_individuals, vote_result_ensembles
-from metrics import calculate_gmean_mauc
+
+from .ensemble_of_instance_subsets import ensemble_individuals, vote_result_ensembles
+from .evolutionary_operator import init_toolbox
 from utils import pre_processing
 import warnings
-from multiprocessing import Manager
 from concurrent.futures import ProcessPoolExecutor
 
 warnings.filterwarnings("ignore")  # Ignore warnings

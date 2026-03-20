@@ -1,23 +1,26 @@
 import math
 import random
 from itertools import chain
-from operator import attrgetter
+import array
+from deap import tools, creator, base
 
-import numpy as np
-from deap import tools
+from .multi_expert_evaluate import *
+from mile.constraint_handing import *
+from .guided_random_initialization import init_by_zero, random_init
 
-# 参见 deap.tools.selTournamentNDCD/selNSGA2
-# 这里对这两个算法进行了重写
-# 主要是将crowding_dist拥挤距离更换为PFC
-# 注意只是值的替换，变量名称仍未crowding_dist
-# 这么做是为了便于调用deap库
+
+# See deap.tools.selTournamentNDCD/selNSGA2
+# These two algorithms have been rewritten here
+# Mainly replacing crowding_dist with PFC
+# Note: only the value is replaced, variable name remains crowding_dist
+# This is done for easier invocation of the deap library
 
 def binary_inversion(individual, mutation_rate=0.2):
-    num_genes = len(individual)  # 基因总数
-    num_mutation = math.ceil(random.uniform(0.05, mutation_rate) * num_genes)  # 突变的总数 (math.ceil向上取整)
-    indices = random.sample(range(num_genes), num_mutation)  # 在num_genes个基因中随机采样num_mutation个
+    num_genes = len(individual)
+    num_mutation = math.ceil(random.uniform(0.05, mutation_rate) * num_genes)
+    indices = random.sample(range(num_genes), num_mutation)
     for index in indices:
-        individual[index] ^= 1  # 将对应位置的二进制编码取反 (按位异或) 1^1->1, 0^1->1
+        individual[index] ^= 1
     return individual,
 
 
@@ -35,21 +38,20 @@ def selTournamentNDCD(individuals, k, tournsize):
     This function uses the :func:`~random.choice` function from the python base
     :mod:`random` module.
     """
-    # 先做非支配排序，再根据选择支配等级进行选择
     chosen = []
     for i in range(k):
-        aspirants = tools.selRandom(individuals, tournsize)  # 随机选择tournsize个个体
-        pareto_fronts = tools.sortNondominated(aspirants, len(aspirants))  # 进行非支配排序
+        aspirants = tools.selRandom(individuals, tournsize)
+        pareto_fronts = tools.sortNondominated(aspirants, len(aspirants))
         tools.emo.assignCrowdingDist(pareto_fronts[0])
         pareto_first_front = sorted(pareto_fronts[0], key=attrgetter("fitness.crowding_dist"),
-                                    reverse=True)  # 按拥挤度降序排列
-        chosen.append(pareto_first_front[0])  # 选择第一个等级中拥挤度最大的
+                                    reverse=True)
+        chosen.append(pareto_first_front[0])
     return chosen
 
 
 def selNSGA2(individuals, k, nd='standard'):
     """
-    基于PFC的NSGAII算法
+    NSGA-II algorithm based on PFC.
     :param individuals: A list of individuals to select from.
     :param k: The number of individuals to select.
     :param nd: Specify the non-dominated algorithm to use: 'standard' or 'log'.
@@ -66,7 +68,7 @@ def selNSGA2(individuals, k, nd='standard'):
         raise Exception('selNSGA2: The choice of non-dominated sorting '
                         'method "{0}" is invalid.'.format(nd))
 
-    assignCrowdingDist_PFC(individuals)
+    assignCrowdingDist_PFC(individuals)  # Replace crowding_dist with PFC, but still name crowding_dist
     chosen = list(chain(*pareto_fronts[:-1]))
     k = k - len(chosen)
     if k > 0:
@@ -87,17 +89,17 @@ def assignCrowdingDist_PFC(individuals):
         return
     failpat = []
     for ind in individuals:
-        y_sub, y_pred_proba = ind.y_sub_and_pred_proba  # 训练子集和对应的预测软标签
-        y_pred = np.argmax(y_pred_proba, axis=1)  # 分类器预测结果
-        binary_sequence = [1 if y1 == y2 else 0 for y1, y2 in zip(y_sub, y_pred)]  # 0表示对应实例预测错误，1表示预测正确
+        y_sub, y_pred_proba = ind.y_sub_and_pred_proba
+        y_pred = np.argmax(y_pred_proba, axis=1)
+        binary_sequence = [1 if y1 == y2 else 0 for y1, y2 in zip(y_sub, y_pred)]
         failpat.append(binary_sequence)
 
-    accfailcred = [[0 for _ in range(len(individuals))] for _ in range(len(individuals))]  # 记录成对的错误预测次数
-    # 计算成对的错误预测次数
+    accfailcred = [[0 for _ in range(len(individuals))] for _ in range(len(individuals))]
+
     for i in range(len(individuals) - 1):
         num_error_i = sum(1 for x in failpat[i] if x == 0)
         for j in range(i + 1, len(individuals)):
-            hamming_distance = sum(x != y for x, y in zip(failpat[i], failpat[j]))  # 计算汉明距离
+            hamming_distance = sum(x != y for x, y in zip(failpat[i], failpat[j]))  # Calculate Hamming distance
             num_error_j = sum(1 for x in failpat[j] if x == 0)
             if (num_error_i + num_error_j) > 0:
                 accfailcred[i][j] = 1.0 * hamming_distance / (num_error_i + num_error_j)
@@ -105,7 +107,29 @@ def assignCrowdingDist_PFC(individuals):
                 accfailcred[i][j] = 1.0 * hamming_distance
             accfailcred[j][i] = accfailcred[i][j]
 
-    row_sum_accfailcred = [sum(row) for row in accfailcred]  # 对每一行求和
+    row_sum_accfailcred = [sum(row) for row in accfailcred]
     for i in range(len(individuals)):
         individuals[i].fitness.crowding_dist = 1.0 * row_sum_accfailcred[i] / (
-                len(individuals) - 1)  # 使用PFC代替拥挤距离，但仍使用crowding_dist命名，目的是为了与deap内置的selNSGA2算法中使用的拥挤距离保持一致
+                len(individuals) - 1)  # Use PFC instead of crowding distance, but still use crowding_dist naming to maintain consistency with crowding distance used in deap's built-in selNSGA2 algorithm
+
+
+def init_toolbox(estimator, x_train, y_train, weights_train, constraints, random_state, n_splits=5):
+    len_ind = len(y_train)
+    creator.create("FitnessMaxAndMax", base.Fitness, weights=(1.0, 1.0, 1.0))
+    creator.create("Individual", array.array, typecode='i', fitness=creator.FitnessMaxAndMax, pfc=None, estimator=None,
+                   y_sub_and_pred_proba=None)
+    toolbox = base.Toolbox()
+    toolbox.register("gene", init_by_zero)
+    toolbox.register("individual", tools.initRepeat, creator.Individual, toolbox.gene, n=len_ind)
+    toolbox.register("init_pop", random_init, y_train=y_train, ratio=0.9)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+    toolbox.register("objective_function", objective_function, weights_train=weights_train)
+    toolbox.register("evaluate", evaluate_individual, estimator=estimator, x_train=x_train, y_train=y_train,
+                     n_splits=n_splits, random_state=random_state, weights_train=weights_train)
+    toolbox.register("mate", tools.cxOnePoint)
+    toolbox.register("mutate", binary_inversion)
+    toolbox.register("select", selNSGA2)
+    toolbox.register("get_feasible_infeasible", get_feasible_infeasible, constraints=constraints)
+    toolbox.register("remove_duplicates", remove_duplicates)
+    toolbox.register("selTournamentNDCD", selTournamentNDCD)
+    return toolbox
