@@ -13,6 +13,7 @@ class MILE():
     """
     Multi-Expert Ensemble with Instance Selection for Imbalanced Learning.
     """
+
     def __init__(self, file_path=None, estimator=None, random_state=42, n_splits=5, display_distribution=True,
                  parameter=None):
         self.file_path = file_path
@@ -31,6 +32,7 @@ class MILE():
         Search for instance subsets and obtain classifier ensemble.
         :return: void
         '''
+        print("Start searching for instance subsets...")
         pop = self.toolbox.population(n=self.parameter.POPSIZE)
         pop = self.toolbox.init_pop(pop)
         with ProcessPoolExecutor(max_workers=8) as pool:  # Evaluate initial population with multi-process
@@ -42,8 +44,10 @@ class MILE():
 
         # Evolutionary search
         for gen in range(0, self.parameter.NGEN):
+            print("Generation:", gen + 1)
             # Selection, crossover, mutation
-            offspring = self.toolbox.selTournamentNDCD(pop, self.parameter.POPSIZE, tournsize=3)  # 1. Non-dominated sorting rank 2. Then PFC
+            offspring = self.toolbox.selTournamentNDCD(pop, self.parameter.POPSIZE,
+                                                       tournsize=3)  # 1. Non-dominated sorting rank 2. Then PFC
             offspring = [self.toolbox.clone(ind) for ind in offspring]
             for i in range(0, len(offspring) - 1, 2):
                 if random.random() <= self.parameter.CXPB:
@@ -88,6 +92,7 @@ class MILE():
                                      :self.parameter.POPSIZE - len(feasible_pop)]
                 ensembles = [infeasible_pop[0]]
             self.ensemble_classifiers = ensemble_individuals(ensembles, self.estimator, self.x_train, self.y_train)
+        print("Finished searching for instance subsets...")
 
     def predict(self, x_test):
         '''
@@ -96,6 +101,7 @@ class MILE():
         '''
         y_pred = vote_result_ensembles(self.ensemble_classifiers, x_test, result='hard')
         return y_pred
+
     def predict_proba(self, x_test):
         '''
         :param x_test: Test set
