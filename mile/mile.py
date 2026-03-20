@@ -9,27 +9,13 @@ import warnings
 from multiprocessing import Manager
 from concurrent.futures import ProcessPoolExecutor
 
-warnings.filterwarnings("ignore")  # 忽略警告
+warnings.filterwarnings("ignore")  # Ignore warnings
 
 
 class MILE():
-    """Multi-Expert Ensemble with Instance Selection for Imbalanced Learning.
-    Parameters
-    ----------
-    dataset: tuple
-        A tuple containing feature data x and label y -> (x, y),
-        x cannot contain a string, y must be an array of 0, 1, 2, 3...
-    estimator : estimator
-        The base estimator from which the ensemble is grown.
-    random_state: int
-        Determines the partitioning of the dataset
-        and the subset of instances at random initialization.
-    n_splits: int
-        k折交叉验证中的k
-    display_distribution: bool
-        是否显示数据的分布信息
     """
-
+    Multi-Expert Ensemble with Instance Selection for Imbalanced Learning.
+    """
     def __init__(self, file_path=None, estimator=None, random_state=42, n_splits=5, display_distribution=True,
                  parameter=None):
         self.file_path = file_path
@@ -45,33 +31,34 @@ class MILE():
 
     def fit(self):
         '''
-        实例子集的搜索，获取分类器集合
+        Search for instance subsets and obtain classifier ensemble.
         :return: void
         '''
-        # 种群的初始化
         pop = self.toolbox.population(n=self.parameter.POPSIZE)
-        pop = self.toolbox.init_pop(pop)  # 初始化种群中的个体
-        with ProcessPoolExecutor(max_workers=8) as pool:  # 评估初始种群
+        pop = self.toolbox.init_pop(pop)
+        with ProcessPoolExecutor(max_workers=8) as pool:  # Evaluate initial population with multi-process
             result = list(pool.map(self.toolbox.evaluate, pop))
         for i, ind in enumerate(pop):
             if result[i]["valid"]:
                 ind.y_sub_and_pred_proba = result[i]["y_sub_and_pred_proba"]  # 保存个体的软标签和预测概率
                 ind.fitness.values = result[i]["fitness"]
-        # 实例子集进化搜索
+
+        # Evolutionary search
         for gen in range(0, self.parameter.NGEN):
-            # 选择、交叉、变异
-            offspring = self.toolbox.selTournamentNDCD(pop, self.parameter.POPSIZE, tournsize=3)  # 1、先由非支配排序的等级 2、再由PFC
+            # Selection, crossover, mutation
+            offspring = self.toolbox.selTournamentNDCD(pop, self.parameter.POPSIZE, tournsize=3)  # 1. Non-dominated sorting rank 2. Then PFC
             offspring = [self.toolbox.clone(ind) for ind in offspring]
             for i in range(0, len(offspring) - 1, 2):
                 if random.random() <= self.parameter.CXPB:
-                    offspring[i], offspring[i + 1] = self.toolbox.mate(offspring[i], offspring[i + 1])  # 单点交叉
-                offspring[i] = self.toolbox.mutate(offspring[i], self.parameter.MUTPB)[0]  # 二进制反转
-                offspring[i + 1] = self.toolbox.mutate(offspring[i + 1], self.parameter.MUTPB)[0]  # 二进制反转
+                    offspring[i], offspring[i + 1] = self.toolbox.mate(offspring[i], offspring[i + 1])
+                offspring[i] = self.toolbox.mutate(offspring[i], self.parameter.MUTPB)[0]
+                offspring[i + 1] = self.toolbox.mutate(offspring[i + 1], self.parameter.MUTPB)[0]
                 del offspring[i].fitness.values, offspring[i + 1].fitness.values
-            # 合并、去重
-            pop = pop + offspring  # 种群的合并
-            pop, _ = self.toolbox.remove_duplicates(pop)  # 去重
-            # 保证种群大小为POPSIZE，避免因重复过多而造成的种群数量减少
+
+            pop = pop + offspring
+            pop, _ = self.toolbox.remove_duplicates(pop)  # Remove duplicates
+
+            # Ensure population size is POPSIZE...
             while len(pop) < self.parameter.POPSIZE:
                 add_individual = []
                 num_add = self.parameter.POPSIZE - len(pop)  # 需要添加的个体数量
@@ -81,69 +68,42 @@ class MILE():
                     offspring[index] = self.toolbox.mutate(offspring[index], self.parameter.MUTPB)[0]  # 选择index对应的个体进行突变
                     del offspring[index].fitness.values
                     add_individual.append(offspring[index])
-                pop = pop + add_individual  # 再次合并
-                pop, _ = self.toolbox.remove_duplicates(pop)  # 再次去重
-            with ProcessPoolExecutor(max_workers=8) as pool:  # 评估初始种群
+                pop = pop + add_individual
+                pop, _ = self.toolbox.remove_duplicates(pop)
+
+            with ProcessPoolExecutor(max_workers=8) as pool:
                 result = list(pool.map(self.toolbox.evaluate, pop))
             for i, ind in enumerate(pop):
                 if result[i]["valid"]:
-                    ind.y_sub_and_pred_proba = result[i]["y_sub_and_pred_proba"]  # 保存个体的软标签和预测概率
+                    ind.y_sub_and_pred_proba = result[i]["y_sub_and_pred_proba"]
                     ind.fitness.values = result[i]["fitness"]
-            feasible_pop, infeasible_pop = self.toolbox.get_feasible_infeasible(pop)  # 得到可行个体与不可行个体
+
+            # Constraint handling
+            feasible_pop, infeasible_pop = self.toolbox.get_feasible_infeasible(pop)
             if len(feasible_pop) >= self.parameter.POPSIZE:
                 pop = self.toolbox.select(feasible_pop, self.parameter.POPSIZE)
-                ensembles = pop  # pop均为可行个体，则集成pop中所有个体
+                ensembles = pop
             elif len(feasible_pop) > 0:
                 pop = feasible_pop + infeasible_pop[
-                                     :self.parameter.POPSIZE - len(feasible_pop)]  # 在不可行个体中选取违约程度小的个体，保证pop数量为POPSIZE
-                ensembles = feasible_pop  # 只集成可行个体
+                                     :self.parameter.POPSIZE - len(feasible_pop)]
+                ensembles = feasible_pop
             else:
                 pop = feasible_pop + infeasible_pop[
-                                     :self.parameter.POPSIZE - len(feasible_pop)]  # 加入不可行个体中违约程度小的个体，保证pop数量为POPSIZE
-                ensembles = [infeasible_pop[0]]  # 没有可行个体，集成不可行个体中第一个个体
+                                     :self.parameter.POPSIZE - len(feasible_pop)]
+                ensembles = [infeasible_pop[0]]
             self.ensemble_classifiers = ensemble_individuals(ensembles, self.estimator, self.x_train, self.y_train)
 
     def predict(self, x_test):
         '''
-        集成预测
-        :param x_test: 测试集特征数据
-        :return: 集成预测结果
+        :param x_test: Test set
+        :return: Prediction results
         '''
         y_pred = vote_result_ensembles(self.ensemble_classifiers, x_test, result='hard')
         return y_pred
-
     def predict_proba(self, x_test):
         '''
-        集成预测概率
-        :param x_test: 测试集特征数据
-        :return: 集成预测概率
+        :param x_test: Test set
+        :return: Prediction results
         '''
         y_pred_prob = vote_result_ensembles(self.ensemble_classifiers, x_test, result='soft')
         return y_pred_prob
-
-
-if __name__ == '__main__':
-    mile_parameter = MILEConfig()
-    IMBALANCED_DATASET_PATH = '../datasets/mat/'
-    DATASET = BalanceScale  # 数据集名称（包含对应的参数配置）
-    file_path = IMBALANCED_DATASET_PATH + DATASET.DATASET_NAME
-    name = BalanceScale.DATASET_NAME.split('.')[0]
-    mlp = MLPClassifier(hidden_layer_sizes=(DATASET.HIDDEN_SIZE,), max_iter=DATASET.MAX_ITER,
-                        random_state=42, learning_rate_init=DATASET.LEARNING_RATE)
-
-    mile = MILE(file_path=file_path, estimator=mlp, random_state=42, n_splits=5, display_distribution=True,
-                parameter=mile_parameter)
-
-    num_run = 40
-    ensembles_results = []
-    for i in range(0, num_run):
-        mile.fit()
-        y_pred = mile.predict(mile.x_test)
-        y_pred_prob = mile.predict_proba(mile.x_test)
-        gmean, mauc = calculate_gmean_mauc(y_pred_prob, mile.y_test)
-        ensembles_results.append([gmean, mauc])
-        print(f"第{i + 1}次运行：Gmean：{gmean}，mAUC：{mauc}")
-    ensembles_result_mean = np.mean(ensembles_results, axis=0)
-    ensembles_result_std = np.std(ensembles_results, axis=0)
-    print(f'集成分类结果（平均值）：{ensembles_result_mean}')
-    print(f'集成分类结果（标准差）：{ensembles_result_std}')
