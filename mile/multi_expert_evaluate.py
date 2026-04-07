@@ -13,11 +13,11 @@ def objective_function(individual, weights_train):
 
 
 def evaluate_individual(individual, estimator, x_train, y_train, n_splits, random_state, weights_train):
-    if not individual.fitness.valid:  # 如果该个体的适应度没有计算过
+    if not individual.fitness.valid:
         x_sub, y_sub = get_subset(individual, x_train, y_train)
         y_pred_proba = cross_val_predict(estimator, x_sub, y_sub, cv=n_splits, method='predict_proba')
-        individual.y_sub_and_pred_proba = (y_sub, y_pred_proba)  # 保存个体的软标签和预测概率
-        individual.fitness.values = objective_function(individual, weights_train)  # 计算个体的目标值
+        individual.y_sub_and_pred_proba = (y_sub, y_pred_proba)
+        individual.fitness.values = objective_function(individual, weights_train)
         return {"valid": True, "fitness": individual.fitness.values,
                 "y_sub_and_pred_proba": individual.y_sub_and_pred_proba}
     return {"valid": False}
