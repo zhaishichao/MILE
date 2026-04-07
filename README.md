@@ -1,4 +1,4 @@
-<img width="1882" height="816" alt="image" src="https://github.com/user-attachments/assets/d66a0270-2b6b-4c54-a844-a90d4e96cee4" /># MILE: Multi-Expert Ensemble with Instance Selection for Multi-Class Imbalanced Learning
+# MILE: Multi-Expert Ensemble with Instance Selection for Multi-Class Imbalanced Learning
 
 This repository implements MILE as presented in the IEEE TEVC 2026 paper. MILE is a skill-diverse expert learning method for multi-class imbalanced learning.
 
@@ -24,4 +24,4 @@ publisher={IEEE}
 This code is released under the MIT License.
 
 # Contact
-If you face any difficulty with the implementation, please refer to: zhuoyachen00@gmail.com
+If you face any difficulty with the implementation, please refer to: sc_zhai@163.com
